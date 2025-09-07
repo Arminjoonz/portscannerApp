@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>PortScanner</title>
+  <style>
+    body{font-family:Vazirmatn,Arial,sans-serif;background:#0e0f13;color:#e8e8ea;margin:0;padding:24px}
+    .card{max-width:520px;margin:0 auto;background:#151821;border:1px solid #252a36;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
+    .head{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid #252a36;background:linear-gradient(180deg,#1a1f2b,#151821)}
+    .logo{width:34px;height:34px;border-radius:7px;background:radial-gradient(90px 40px at 20% 20%,#4ade80,transparent),radial-gradient(90px 40px at 80% 80%,#22d3ee,transparent),#0b1220;border:1px solid #2a3142;box-shadow:0 0 18px rgba(34,211,238,.25) inset}
+    h1{font-size:18px;margin:0}
+    .body{padding:18px 20px}
+    label{display:block;margin-top:12px;color:#9aa3b2;font-size:13px}
+    input,select,button{width:100%;margin-top:6px;padding:10px 12px;border-radius:10px;border:1px solid #2a3142;background:#0f1420;color:#e8e8ea;outline:0}
+    button{margin-top:16px;background:linear-gradient(90deg,#22d3ee,#4ade80);color:#0a0f18;border:0;font-weight:700;cursor:pointer}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    #results{margin-top:16px;background:#0b0f17;color:#6ff7a1;border:1px solid #233049;border-radius:10px;padding:12px;height:280px;overflow:auto;font:12px/1.5 monospace}
+    .muted{color:#9aa3b2;font-size:12px;margin-top:10px}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="logo"></div>
+    <div>
+      <h1>PortScanner</h1>
+      <div class="muted">اسکن پورت با WebView (آموزشی)</div>
+    </div>
+  </div>
+  <div class="body">
+    <label>آدرس هدف (IP / Host)</label>
+    <input id="host" placeholder="مثلاً 192.168.1.1" value="192.168.1.1">
+
+    <label>حالت اسکن</label>
+    <select id="scanmode">
+      <option value="single">Single Port</option>
+      <option value="range">Range Scan</option>
+      <option value="full">Full Scan (1-65535)</option>
+    </select>
+
+    <div class="row">
+      <div>
+        <label>Start Port</label>
+        <input id="startport" type="number" value="80">
+      </div>
+      <div>
+        <label>End Port</label>
+        <input id="endport" type="number" value="1024">
+      </div>
+    </div>
+
+    <button id="btn" onclick="startScan()">شروع اسکن</button>
+    <div id="results">[+] نتایج اینجا نمایش داده می‌شود…</div>
+    <div class="muted">نکته: این روش صرفاً جهت آموزش است و ممکن است همهٔ پورت‌های باز را تشخیص ندهد.</div>
+  </div>
+</div>
+
+<script>
+async function startScan(){
+  const host = document.getElementById('host').value.trim();
+  const mode = document.getElementById('scanmode').value;
+  const result = document.getElementById('results');
+  const btn = document.getElementById('btn');
+
+  let startPort = parseInt(document.getElementById('startport').value)||1;
+  let endPort   = parseInt(document.getElementById('endport').value)||1024;
+  if(mode==='full'){startPort=1;endPort=65535}
+  if(mode==='single'){endPort=startPort}
+
+  result.innerHTML = [*] شروع اسکن ${host} از پورت ${startPort} تا ${endPort}<br>;
+  btn.disabled = true;
+
+  // توجه: fetch به اسکیم "http" فقط پورت‌هایی که سرویس HTTP دارند را تشخیص می‌دهد.
+  // برای جلوگیری از گیر کردن، تایم‌اوت کوتاه گذاشته‌ایم.
+  for(let port=startPort; port<=endPort; port++){
+    try{
+      const controller = new AbortController();
+      const t = setTimeout(()=>controller.abort(), 350);
+      await fetch(http://${host}:${port}, {signal: controller.signal, mode: 'no-cors'}).catch(()=>{ /* سکوت */ });
+      clearTimeout(t);
+    }catch(err){
+      result.innerHTML += [!] Error on port ${port}: ${String(err)}<br>;
+    }
+    if((port-startPort)%200===0){ await new Promise(r=>setTimeout(r,10)); }
+  }
+  result.innerHTML += [*] پایان اسکن.<br>;
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
+        .then(()=>{ result.innerHTML += [+] Port ${port} (maybe OPEN on HTTP)\n<br> })
